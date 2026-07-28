@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Sample — Análise Comercial</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --ink:#12140F;
+    --panel:#1B1E16;
+    --panel-2:#20241B;
+    --line: rgba(237,233,222,0.10);
+    --gold:#D4A72C;
+    --green:#5E8C61;
+    --clay:#B5533C;
+    --bone:#EDE9DE;
+    --muted:#9AA08B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--ink);color:var(--bone);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  .app{max-width:1180px;margin:0 auto;padding:28px 20px 100px;}
+
+  header.top{display:flex;flex-direction:column;gap:4px;margin-bottom:26px;border-bottom:1px solid var(--line);padding-bottom:18px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(22px,4vw,32px);margin:2px 0 4px;}
+  .sub{color:var(--muted);font-size:13.5px;max-width:560px;line-height:1.5;}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;}
+  .kpi .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+  .kpi .value{font-family:'IBM Plex Mono',monospace;font-size:clamp(16px,2.4vw,22px);font-weight:500;color:var(--bone);}
+  .kpi .value.pos{color:var(--green);}
+  .kpi .value.neg{color:var(--clay);}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px 20px;}
+  .panel h3{font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin:0 0 2px;font-weight:700;}
+  .panel .hint{font-size:11px;color:var(--muted);margin-bottom:10px;}
+  .panel.full{grid-column:1/-1;}
+
+  svg{display:block;width:100%;height:auto;overflow:visible;}
+  .bar-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;fill:var(--muted);}
+  .bar-value{font-family:'IBM Plex Mono',monospace;font-size:10.5px;fill:var(--bone);}
+  .axis-line{stroke:var(--line);stroke-width:1;}
+
+  .tooltip{position:fixed;pointer-events:none;background:#0B0C08;border:1px solid var(--gold);border-radius:5px;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--bone);z-index:50;opacity:0;transition:opacity .1s;white-space:nowrap;}
+  .tooltip .t-title{color:var(--gold);font-weight:500;margin-bottom:3px;}
+
+  .page{display:none;animation:fade .25s ease;}
+  .page.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:center;gap:6px;padding:10px 12px;z-index:40;}
+  .tab{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:5px;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:7px;}
+  .tab .n{color:var(--gold);font-weight:500;}
+  .tab.active{color:var(--bone);border-color:var(--line);background:var(--panel-2);}
+  .tab:hover{color:var(--bone);}
+
+  .map-wrap{position:relative;}
+  .grat{stroke:rgba(237,233,222,0.06);stroke-width:1;}
+  .bubble{cursor:pointer;transition:opacity .15s;}
+  .bubble:hover{opacity:0.75;}
+  .country-tag{font-family:'IBM Plex Mono',monospace;font-size:9.5px;fill:var(--muted);}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  .tbl{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .tbl th{text-align:left;color:var(--muted);font-weight:400;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;padding:6px 8px;border-bottom:1px solid var(--line);}
+  .tbl td{padding:7px 8px;border-bottom:1px solid var(--line);}
+  .tbl td.num{text-align:right;}
+
+  @media (max-width:720px){
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .grid2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="app">
+  <header class="top">
+    <div class="eyebrow">Desafio Power BI · DIO — replicado sem PBI Desktop</div>
+    <h1>Financial Sample — Análise Comercial</h1>
+    <p class="sub">Dashboard substituto ao relatório em Power BI, construído a partir do mesmo dataset (Financial Sample), com as 3 páginas do desafio: Visão Geral, Análise de Lucro e Visão Geográfica.</p>
+  </header>
+
+  <!-- PAGE 1 -->
+  <section class="page active" id="page-1">
+    <div class="kpi-row">
+      <div class="kpi"><div class="label">Vendas Totais</div><div class="value mono" id="kpi-sales"></div></div>
+      <div class="kpi"><div class="label">Lucro Total</div><div class="value mono" id="kpi-profit"></div></div>
+      <div class="kpi"><div class="label">Unidades Vendidas</div><div class="value mono" id="kpi-units"></div></div>
+      <div class="kpi"><div class="label">Margem de Lucro</div><div class="value mono" id="kpi-margin"></div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel full">
+        <h3>Vendas x Lucro por Mês</h3>
+        <div class="hint">Tooltip: mês, vendas e lucro do período</div>
+        <svg id="chart-trend" viewBox="0 0 900 260"></svg>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--gold)"></i>Vendas</span>
+          <span><i class="dot" style="background:var(--green)"></i>Lucro</span>
+        </div>
+      </div>
+      <div class="panel full">
+        <h3>Vendas por Produto</h3>
+        <div class="hint">Tooltip: produto e total de vendas</div>
+        <svg id="chart-product-sales" viewBox="0 0 900 220"></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 2 -->
+  <section class="page" id="page-2">
+    <div class="grid2">
+      <div class="panel">
+        <h3>Lucro por Produto</h3>
+        <div class="hint">Tooltip: produto e lucro total</div>
+        <svg id="chart-product-profit" viewBox="0 0 440 240"></svg>
+      </div>
+      <div class="panel">
+        <h3>Lucro por Segmento de Cliente</h3>
+        <div class="hint">Tooltip: segmento e lucro total (vermelho = prejuízo)</div>
+        <svg id="chart-segment-profit" viewBox="0 0 440 240"></svg>
+      </div>
+      <div class="panel full">
+        <h3>Resumo por Segmento</h3>
+        <table class="tbl" id="tbl-segment"></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 3 -->
+  <section class="page" id="page-3">
+    <div class="grid2">
+      <div class="panel">
+        <h3>Vendas e Unidades Vendidas por País</h3>
+        <div class="hint">Bolha = volume de vendas · Tooltip: país, vendas e unidades vendidas</div>
+        <div class="map-wrap"><svg id="map-sales" viewBox="0 0 440 300"></svg></div>
+      </div>
+      <div class="panel">
+        <h3>Lucro por País</h3>
+        <div class="hint">Bolha = volume de lucro · Tooltip: país, lucro e margem</div>
+        <div class="map-wrap"><svg id="map-profit" viewBox="0 0 440 300"></svg></div>
+      </div>
+      <div class="panel full">
+        <h3>Lucro por Segmento de Cliente</h3>
+        <div class="hint">Tooltip: segmento, lucro e participação % no total</div>
+        <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+          <svg id="chart-pie" viewBox="0 0 240 240" style="width:220px;flex-shrink:0;"></svg>
+          <div class="legend" id="pie-legend" style="flex-direction:column;align-items:flex-start;gap:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs">
+  <button class="tab active" data-page="1"><span class="n">01</span> Visão Geral</button>
+  <button class="tab" data-page="2"><span class="n">02</span> Análise de Lucro</button>
+  <button class="tab" data-page="3"><span class="n">03</span> Geográfico</button>
+</nav>
+
+<script>
+const DATA = {
+  country_sales: {"Canada":24887654.89,"Germany":23505340.82,"France":24354172.28,"Mexico":20949352.11,"United States of America":25029830.17},
+  country_units: {"Canada":247428.5,"Germany":201494.0,"France":240931.0,"Mexico":203325.0,"United States of America":232627.5},
+  country_profit: {"Canada":3529228.89,"Germany":3680388.82,"France":3781020.78,"Mexico":2907523.11,"United States of America":2995540.66},
+  segment_profit: {"Government":11388173.17,"Midmarket":660103.07,"Channel Partners":1316803.14,"Enterprise":-614545.62,"Small Business":4143168.5},
+  segment_sales: {"Government":52504260.67,"Midmarket":2381883.08,"Channel Partners":1800593.64,"Enterprise":19611694.38,"Small Business":42427918.5},
+  product_sales: {"Carretera":13815307.89,"Montana":15390801.88,"Paseo":33011143.95,"Velo":18250059.46,"VTT":20511921.02,"Amarilla":17747116.06},
+  product_profit: {"Carretera":1826804.88,"Montana":2114754.88,"Paseo":4797437.95,"Velo":2305992.46,"VTT":3034608.02,"Amarilla":2814104.06},
+  months_labels: ["Sep/2013","Oct/2013","Nov/2013","Dec/2013","Jan/2014","Feb/2014","Mar/2014","Apr/2014","May/2014","Jun/2014","Jul/2014","Aug/2014","Sep/2014","Oct/2014","Nov/2014","Dec/2014"],
+  months_sales: [4484000.03,9295611.1,7267203.3,5368441.08,6607761.68,7297531.39,5586859.87,6964775.07,6210211.06,9518893.82,8102920.18,5864622.42,6398697.24,12375819.92,5384214.2,11998787.9],
+  months_profit: [763603.03,1657795.1,765502.3,691564.08,814028.68,1148547.39,669866.87,929984.57,828640.06,1473753.82,923865.68,791066.42,1023132.24,1781985.92,604600.2,2025765.9]
+};
+
+const COUNTRY_COORDS = {
+  "United States of America": {lat:39.8, lon:-98.5, short:"EUA"},
+  "Canada": {lat:45.4, lon:-75.7, short:"Canadá"},
+  "Mexico": {lat:19.4, lon:-99.1, short:"México"},
+  "France": {lat:48.85, lon:2.35, short:"França"},
+  "Germany": {lat:52.52, lon:13.4, short:"Alemanha"}
+};
+
+const fmtBRL = n => 'US$ ' + (Math.abs(n) >= 1e6 ? (n/1e6).toFixed(1)+'M' : (n/1e3).toFixed(0)+'K');
+const fmtFull = n => n.toLocaleString('pt-BR', {maximumFractionDigits:0});
+const fmtUnits = n => n.toLocaleString('pt-BR', {maximumFractionDigits:0});
+
+const tooltip = document.getElementById('tooltip');
+function showTip(evt, title, lines){
+  tooltip.innerHTML = `<div class="t-title">${title}</div>` + lines.map(l=>`<div>${l}</div>`).join('');
+  tooltip.style.opacity = 1;
+  moveTip(evt);
+}
+function moveTip(evt){
+  tooltip.style.left = (evt.clientX + 14) + 'px';
+  tooltip.style.top = (evt.clientY + 14) + 'px';
+}
+function hideTip(){ tooltip.style.opacity = 0; }
+
+function svgEl(tag, attrs){
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for(const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+// ---------- KPIs ----------
+(function(){
+  const totalSales = Object.values(DATA.country_sales).reduce((a,b)=>a+b,0);
+  const totalProfit = Object.values(DATA.country_profit).reduce((a,b)=>a+b,0);
+  const totalUnits = Object.values(DATA.country_units).reduce((a,b)=>a+b,0);
+  document.getElementById('kpi-sales').textContent = 'US$ ' + fmtFull(totalSales);
+  document.getElementById('kpi-profit').textContent = 'US$ ' + fmtFull(totalProfit);
+  document.getElementById('kpi-units').textContent = fmtUnits(totalUnits);
+  document.getElementById('kpi-margin').textContent = ((totalProfit/totalSales)*100).toFixed(1) + '%';
+})();
+
+// ---------- Trend chart (page 1) ----------
+(function(){
+  const svg = document.getElementById('chart-trend');
+  const W=900,H=260,padL=50,padR=10,padT=10,padB=26;
+  const labels = DATA.months_labels;
+  const sales = DATA.months_sales;
+  const profit = DATA.months_profit;
+  const maxV = Math.max(...sales);
+  const x = i => padL + (i/(labels.length-1)) * (W-padL-padR);
+  const y = v => H-padB - (v/maxV)*(H-padT-padB);
+
+  svg.appendChild(svgEl('line',{class:'axis-line',x1:padL,y1:H-padB,x2:W-padR,y2:H-padB}));
+
+  function pathFor(arr){
+    return arr.map((v,i)=> (i===0?'M':'L') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(' ');
+  }
+  svg.appendChild(svgEl('path',{d:pathFor(sales),fill:'none',stroke:'var(--gold)','stroke-width':2}));
+  svg.appendChild(svgEl('path',{d:pathFor(profit),fill:'none',stroke:'var(--green)','stroke-width':2}));
+
+  labels.forEach((lab,i)=>{
+    [['gold',sales,'Vendas'],['green',profit,'Lucro']].forEach(([color,arr,name])=>{
+      const c = svgEl('circle',{cx:x(i),cy:y(arr[i]),r:3.4,fill:`var(--${color})`,class:'bubble'});
+      c.addEventListener('mousemove', e=> showTip(e, lab, [`Vendas: US$ ${fmtFull(sales[i])}`, `Lucro: US$ ${fmtFull(profit[i])}`]));
+      c.addEventListener('mouseleave', hideTip);
+      svg.appendChild(c);
+    });
+    if(i % 2 === 0){
+      const t = svgEl('text',{x:x(i),y:H-8,class:'bar-label','text-anchor':'middle'});
+      t.textContent = lab;
+      svg.appendChild(t);
+    }
+  });
+})();
+
+// ---------- Generic horizontal bar chart ----------
+function drawHBars(svgId, dataObj, opts={}){
+  const svg = document.getElementById(svgId);
+  const entries = Object.entries(dataObj).sort((a,b)=> Math.abs(b[1])-Math.abs(a[1]));
+  const vb = svg.viewBox.baseVal;
+  const W = vb.width, H = vb.height;
+  const padL = opts.padL || 130, padR = 60, top = 10, rowH = (H-20)/entries.length;
+  const maxAbs = Math.max(...entries.map(e=>Math.abs(e[1])));
+  const zeroX = padL;
+  entries.forEach(([name,val], i)=>{
+    const yc = top + i*rowH + rowH/2;
+    const w = (Math.abs(val)/maxAbs) * (W-padL-padR);
+    const barColor = val < 0 ? 'var(--clay)' : (opts.color || 'var(--gold)');
+    const rect = svgEl('rect',{x:zeroX, y:yc-rowH*0.28, width:Math.max(w,2), height:rowH*0.56, rx:2, fill:barColor, class:'bubble'});
+    rect.addEventListener('mousemove', e=> showTip(e, opts.short ? (opts.short[name]||name) : name, [`${opts.label||'Valor'}: US$ ${fmtFull(val)}`]));
+    rect.addEventListener('mouseleave', hideTip);
+    svg.appendChild(rect);
+    const label = svgEl('text',{x:zeroX-8, y:yc+4, class:'bar-label','text-anchor':'end'});
+    label.textContent = opts.short ? (opts.short[name]||name) : name;
+    svg.appendChild(label);
+    const valTxt = svgEl('text',{x:zeroX+w+8, y:yc+4, class:'bar-value'});
+    valTxt.textContent = fmtBRL(val);
+    svg.appendChild(valTxt);
+  });
+}
+drawHBars('chart-product-sales', DATA.product_sales, {label:'Vendas', color:'var(--gold)'});
+drawHBars('chart-product-profit', DATA.product_profit, {label:'Lucro', color:'var(--green)'});
+drawHBars('chart-segment-profit', DATA.segment_profit, {label:'Lucro', color:'var(--green)', padL:110});
+
+// ---------- Segment table (page 2) ----------
+(function(){
+  const tbl = document.getElementById('tbl-segment');
+  let html = '<tr><th>Segmento</th><th style="text-align:right">Vendas</th><th style="text-align:right">Lucro</th><th style="text-align:right">Margem</th></tr>';
+  Object.keys(DATA.segment_sales).sort((a,b)=>DATA.segment_profit[b]-DATA.segment_profit[a]).forEach(seg=>{
+    const s = DATA.segment_sales[seg], p = DATA.segment_profit[seg];
+    const margin = ((p/s)*100).toFixed(1)+'%';
+    html += `<tr><td>${seg}</td><td class="num">US$ ${fmtFull(s)}</td><td class="num" style="color:${p<0?'var(--clay)':'var(--bone)'}">US$ ${fmtFull(p)}</td><td class="num">${margin}</td></tr>`;
+  });
+  tbl.innerHTML = html;
+})();
+
+// ---------- Maps (page 3) ----------
+function projectLatLon(lat, lon, W, H){
+  const lonMin=-130, lonMax=30, latMin=10, latMax=65;
+  const x = (lon-lonMin)/(lonMax-lonMin) * W;
+  const y = (latMax-lat)/(latMax-latMin) * H;
+  return [x,y];
+}
+
+function drawMap(svgId, valueObj, opts){
+  const svg = document.getElementById(svgId);
+  const vb = svg.viewBox.baseVal;
+  const W = vb.width, H = vb.height;
+
+  // graticule
+  for(let gx=0; gx<=W; gx+=W/8) svg.appendChild(svgEl('line',{class:'grat',x1:gx,y1:0,x2:gx,y2:H}));
+  for(let gy=0; gy<=H; gy+=H/6) svg.appendChild(svgEl('line',{class:'grat',x1:0,y1:gy,x2:W,y2:gy}));
+
+  const maxV = Math.max(...Object.values(valueObj).map(Math.abs));
+  const maxR = opts.maxR || 30;
+
+  Object.entries(COUNTRY_COORDS).forEach(([country, coord])=>{
+    const val = valueObj[country];
+    if(val === undefined) return;
+    const [cx,cy] = projectLatLon(coord.lat, coord.lon, W, H);
+    const r = 6 + (Math.abs(val)/maxV) * maxR;
+
+    const circle = svgEl('circle',{cx,cy,r,fill:opts.color,'fill-opacity':0.28,stroke:opts.color,'stroke-width':1.4,class:'bubble'});
+    circle.addEventListener('mousemove', e=> showTip(e, coord.short, opts.tip(country,val)));
+    circle.addEventListener('mouseleave', hideTip);
+    svg.appendChild(circle);
+
+    const dot = svgEl('circle',{cx,cy,r:2.5,fill:opts.color});
+    svg.appendChild(dot);
+
+    const label = svgEl('text',{x:cx, y: cy - r - 6, class:'country-tag','text-anchor':'middle'});
+    label.textContent = coord.short;
+    svg.appendChild(label);
+  });
+}
+
+drawMap('map-sales', DATA.country_sales, {
+  color: 'var(--gold)'.replace('var(--gold)','#D4A72C'),
+  maxR: 34,
+  tip: (country,val) => [`Vendas: US$ ${fmtFull(val)}`, `Unidades: ${fmtUnits(DATA.country_units[country])}`]
+});
+drawMap('map-profit', DATA.country_profit, {
+  color: '#5E8C61',
+  maxR: 30,
+  tip: (country,val) => {
+    const sales = DATA.country_sales[country];
+    return [`Lucro: US$ ${fmtFull(val)}`, `Margem: ${((val/sales)*100).toFixed(1)}%`];
+  }
+});
+
+// ---------- Pie chart (page 3) ----------
+(function(){
+  const svg = document.getElementById('chart-pie');
+  const legend = document.getElementById('pie-legend');
+  const cx=120, cy=120, r=95, rInner=48;
+  const colors = ['#D4A72C','#5E8C61','#8FBF9F','#B5533C','#7A8A63'];
+  const entries = Object.entries(DATA.segment_profit).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const total = entries.reduce((s,[,v])=>s+v,0);
+  let angle = -Math.PI/2;
+
+  entries.forEach(([seg,val], i)=>{
+    const frac = val/total;
+    const a0 = angle;
+    const a1 = angle + frac*Math.PI*2;
+    angle = a1;
+    const large = (a1-a0) > Math.PI ? 1 : 0;
+    const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    const xi0 = cx + rInner*Math.cos(a1), yi0 = cy + rInner*Math.sin(a1);
+    const xi1 = cx + rInner*Math.cos(a0), yi1 = cy + rInner*Math.sin(a0);
+    const d = `M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} L ${xi0} ${yi0} A ${rInner} ${rInner} 0 ${large} 0 ${xi1} ${yi1} Z`;
+    const path = svgEl('path',{d, fill:colors[i%colors.length], class:'bubble'});
+    path.addEventListener('mousemove', e=> showTip(e, seg, [`Lucro: US$ ${fmtFull(val)}`, `Participação: ${(frac*100).toFixed(1)}%`]));
+    path.addEventListener('mouseleave', hideTip);
+    svg.appendChild(path);
+
+    const li = document.createElement('span');
+    li.innerHTML = `<i class="dot" style="background:${colors[i%colors.length]}"></i>${seg} — ${(frac*100).toFixed(1)}%`;
+    legend.appendChild(li);
+  });
+
+  const note = document.createElement('div');
+  note.style.cssText = 'color:var(--clay);font-size:11px;margin-top:4px;';
+  const negTotal = DATA.segment_profit['Enterprise'];
+  if(negTotal < 0) note.textContent = `Enterprise: US$ ${fmtFull(negTotal)} (prejuízo, fora do gráfico)`;
+  legend.appendChild(note);
+})();
+
+// tooltip follow
+document.addEventListener('mousemove', moveTip);
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
