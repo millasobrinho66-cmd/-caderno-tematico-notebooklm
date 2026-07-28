@@ -1,0 +1,72 @@
+# 📊 Desafio Power BI Analyst — DIO
+
+Projeto desenvolvido como parte da trilha **Power BI Analyst** da [DIO (Digital Innovation One)](https://www.dio.me/), com o objetivo de replicar e evoluir um relatório em Power BI a partir de uma amostra de dados de vendas.
+
+Este repositório é um fork/evolução do projeto original disponibilizado pela instrutora Juliana Zanelatto:
+🔗 [julianazanelatto/power_bi_analyst](https://github.com/julianazanelatto/power_bi_analyst)
+
+---
+
+## 🎯 Sobre o desafio
+
+O desafio consistia em:
+
+1. Replicar duas páginas de relatório já construídas durante o curso, usando a base de dados de amostra fornecida
+2. Criar uma **terceira página autoral**, contendo:
+   - 🗺️ **Mapa 1** — Soma de vendas (*sales*) e unidades vendidas por país
+   - 🗺️ **Mapa 2** — Soma de lucro (*profit*) por país
+   - 🥧 **Gráfico de pizza** — Lucro por segmento
+3. Organizar a disposição dos visuais na página
+4. Renomear os visuais de forma clara e direta, de acordo com o contexto de negócio
+5. Configurar corretamente os campos usados como *tooltips* (dicas de ferramenta)
+6. Publicar o relatório e compartilhá-lo (como suplemento no PowerPoint ou como arquivo `.pbix`)
+
+---
+
+## 🛠️ Tecnologias e ferramentas
+
+- Power BI (Service / Desktop)
+- Power Query
+- DAX
+- Dataset de amostra (fornecido no repositório original)
+
+---
+
+## 📁 Estrutura do repositório
+
+```
+├── dataset/              # Base de dados utilizada no projeto
+├── relatorio/            # Arquivo .pbix e/ou prints do relatório final
+├── assets/               # Imagens e capturas de tela das páginas
+└── README.md
+```
+
+---
+
+## 🖼️ Prévia do relatório
+
+> _Prints das 3 páginas do relatório serão adicionados aqui._
+
+| Página 1 | Página 2 | Página 3 (autoral) |
+|---|---|---|
+| _em breve_ | _em breve_ | _em breve_ |
+
+---
+
+## 🚀 Como visualizar
+
+- **Arquivo `.pbix`**: baixe o arquivo na pasta `relatorio/` e abra no Power BI Desktop
+- **Relatório publicado**: [link para o relatório publicado no Power BI Service] *(adicionar quando disponível)*
+
+---
+
+## ✍️ Autora
+
+**Camilla** — Estudante de Administração e Marketing Activation Intern
+[LinkedIn] · [Vagas.com] *(adicionar links)*
+
+---
+
+## 📚 Créditos
+
+Projeto base e dataset por [Juliana Zanelatto](https://github.com/julianazanelatto), desenvolvido no contexto da trilha Power BI Analyst da [DIO](https://www.dio.me/).
