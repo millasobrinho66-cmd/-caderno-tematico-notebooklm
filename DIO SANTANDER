@@ -1,0 +1,220 @@
+📚 Caderno Temático - Gestão de Budget em Marketing com NotebookLM
+
+🎯 Sobre o Projeto
+
+Este projeto foi desenvolvido como parte do desafio da Digital Innovation One (DIO) com o objetivo de explorar o uso do NotebookLM como ferramenta de aprendizagem baseada em Inteligência Artificial.
+
+O tema escolhido foi Gestão de Budget em Marketing, por ser uma área estratégica para o planejamento financeiro, controle de investimentos e análise de desempenho das ações de marketing.
+
+Durante o projeto, foram utilizadas fontes confiáveis para construir um caderno temático, aplicar engenharia de prompts, consolidar conceitos e criar um guia de estudos reutilizável.
+
+⸻
+
+🎯 Objetivos de Estudo
+
+* Compreender o processo de gestão de budget em marketing.
+* Estudar conceitos financeiros utilizados no ambiente corporativo.
+* Aprender os principais indicadores (KPIs) utilizados na análise financeira.
+* Desenvolver habilidades de engenharia de prompts utilizando IA.
+* Consolidar o aprendizado por meio de resumos, glossário e materiais de revisão.
+
+⸻
+
+📌 Tema Escolhido
+
+Gestão de Budget e Análise Financeira para Marketing
+
+⸻
+
+📖 Fontes Utilizadas
+
+As seguintes fontes foram utilizadas como base para o desenvolvimento do caderno temático no NotebookLM:
+
+* Google Skillshop
+* HubSpot Academy
+* Microsoft Learn
+* Sebrae – Gestão Financeira
+
+⸻
+
+🤖 Engenharia de Prompts
+
+Durante o estudo foram realizados diversos testes para compreender como a qualidade dos prompts influencia diretamente a qualidade das respostas produzidas pela IA.
+
+Prompt 1
+
+Explique a diferença entre Budget, Forecast e Actual utilizando exemplos simples.
+
+Resultado
+
+Foi possível compreender claramente as diferenças entre planejamento, previsão e valores realizados utilizando exemplos práticos.
+
+⸻
+
+Prompt 2
+
+Quais KPIs financeiros são mais utilizados na gestão de marketing?
+
+Resultado
+
+Foram identificados indicadores como:
+
+* ROI
+* ROAS
+* CAC
+* LTV
+* MER
+* LTV:CAC
+
+⸻
+
+Prompt 3
+
+Como organizar uma planilha profissional para controle de budget em marketing utilizando Excel?
+
+Resultado
+
+Foi sugerida uma estrutura contendo:
+
+* Projeto
+* Centro de custo
+* Fornecedor
+* Budget
+* Actual
+* Forecast
+* Variação
+* Status
+* Receita
+* ROI
+* ROAS
+
+Além disso, foram apresentadas fórmulas importantes como PROCX, SOMASES, FILTRO, LET e boas práticas para utilização de Power Query e Tabelas Dinâmicas.
+
+⸻
+
+⚠️ Cicatrizes (Troubleshooting)
+
+Durante o desenvolvimento do projeto foram encontrados alguns desafios.
+
+Problema
+
+As respostas iniciais eram muito genéricas.
+
+Solução
+
+Os prompts passaram a ser mais específicos, solicitando:
+
+* exemplos práticos;
+* tabelas;
+* estudos de caso;
+* comparações;
+* aplicações corporativas;
+* resumos estruturados.
+
+Como resultado, as respostas ficaram muito mais completas e úteis.
+
+⸻
+
+📒 Resumo do Conteúdo
+
+A gestão de budget em marketing deixou de ser apenas um controle de despesas e passou a ser uma ferramenta estratégica para geração de resultados.
+
+Os materiais estudados mostram que empresas modernas buscam integrar Marketing e Finanças através de decisões baseadas em dados, indicadores financeiros e Inteligência Artificial.
+
+Também foram estudados conceitos como:
+
+* Budget
+* Forecast
+* Actual
+* ROI
+* ROAS
+* CAC
+* LTV
+* MER
+* Orçamento Base Zero (OBZ)
+
+Outro aprendizado importante foi a necessidade de equilibrar investimentos entre branding e performance, utilizando indicadores financeiros para orientar decisões estratégicas.
+
+⸻
+
+📖 Glossário
+
+Termo	Significado
+Budget	Planejamento financeiro
+Forecast	Atualização da previsão financeira
+Actual	Valor realizado
+KPI	Indicador de desempenho
+ROI	Retorno sobre investimento
+ROAS	Retorno sobre anúncios
+CAC	Custo de aquisição de cliente
+LTV	Valor do ciclo de vida do cliente
+MER	Marketing Efficiency Ratio
+OBZ	Orçamento Base Zero
+
+⸻
+
+✅ Checklist do Analista de Budget
+
+* Consolidar os gastos realizados.
+* Comparar Budget x Actual.
+* Atualizar o Forecast.
+* Investigar desvios orçamentários.
+* Calcular KPIs.
+* Atualizar dashboards.
+* Validar despesas por projeto.
+* Preparar relatórios gerenciais.
+
+⸻
+
+🧠 Principais Aprendizados
+
+* O marketing moderno precisa comprovar impacto financeiro.
+* A IA acelera a organização e consolidação do conhecimento.
+* A engenharia de prompts influencia diretamente a qualidade das respostas.
+* O controle financeiro depende de indicadores consistentes.
+* Dados bem organizados facilitam decisões estratégicas.
+
+⸻
+
+💡 Prompts Reutilizáveis
+
+* Explique este conceito utilizando exemplos práticos.
+* Compare os conceitos em formato de tabela.
+* Monte um mapa mental.
+* Crie um resumo executivo.
+* Gere um quiz de revisão.
+* Explique como aplicar esse conceito em empresas.
+* Simule um estudo de caso.
+* Crie um checklist operacional.
+* Sugira indicadores para acompanhar este processo.
+* Transforme este conteúdo em um guia de estudos.
+
+⸻
+
+🛠️ Tecnologias Utilizadas
+
+* NotebookLM
+* Inteligência Artificial
+* GitHub
+* Markdown
+* Excel
+* Power Query
+* Power BI
+
+⸻
+
+🚀 Conclusão
+
+O NotebookLM demonstrou ser uma ferramenta eficiente para organizar estudos, sintetizar informações provenientes de diferentes fontes e apoiar a construção de conhecimento de forma estruturada.
+
+Além do aprendizado técnico sobre gestão de budget em marketing, o projeto reforçou a importância da engenharia de prompts para obter respostas mais completas, contextualizadas e aplicáveis ao ambiente corporativo.
+
+Este desafio contribuiu para desenvolver habilidades relacionadas à pesquisa, curadoria de fontes, organização do conhecimento e utilização prática da Inteligência Artificial em processos de aprendizagem.
+
+⸻
+
+👩‍💻 Autora
+
+Camilla Azevedo
+
+Projeto desenvolvido para o desafio “Criando um Caderno Temático com NotebookLM” da Digital Innovation One (DIO).
