@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Performance Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F5F2;
+    --card:#FFFFFF;
+    --nav:#1B2B22;
+    --green:#4C7A57;
+    --gold:#C99A2E;
+    --terracotta:#B5533C;
+    --text:#2B2B26;
+    --text2:#7A7C6E;
+    --grid:#E4E2D8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  }
+  .mono{ font-family:'Consolas','SF Mono','Menlo',monospace; }
+
+  /* ---------- NAV ---------- */
+  .navbar{
+    height:60px;
+    background:var(--nav);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:0 24px;
+    position:sticky;
+    top:0;
+    z-index:40;
+  }
+  .navbar .brand{
+    color:#fff;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:.5px;
+    margin-right:16px;
+    opacity:.85;
+    white-space:nowrap;
+  }
+  .navbar button{
+    background:transparent;
+    border:none;
+    color:#fff;
+    font-family:inherit;
+    font-weight:600;
+    font-size:12.5px;
+    padding:9px 18px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:background .15s ease;
+    white-space:nowrap;
+  }
+  .navbar button:hover:not(.active){ background:rgba(255,255,255,.1); }
+  .navbar button.active{ background:var(--gold); color:var(--nav); }
+
+  /* ---------- KPI STRIP ---------- */
+  .kpi-strip{
+    display:flex;
+    gap:14px;
+    padding:16px 24px;
+    background:var(--bg);
+    flex-wrap:wrap;
+  }
+  .kpi-card{
+    flex:1 1 160px;
+    background:var(--card);
+    border:1px solid var(--grid);
+    border-radius:8px;
+    padding:12px 16px;
+    min-height:78px;
+  }
+  .kpi-label{
+    font-size:9px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--text2);
+    font-weight:600;
+  }
+  .kpi-value{
+    font-family:'Consolas','SF Mono',monospace;
+    font-size:25px;
+    font-weight:700;
+    margin-top:4px;
+    color:var(--text);
+  }
+
+  /* ---------- FILTERS ---------- */
+  .filters-bar{
+    display:flex;
+    align-items:center;
+    gap:22px;
+    padding:10px 24px;
+    background:#fff;
+    border-top:1px solid var(--grid);
+    border-bottom:1px solid var(--grid);
+    flex-wrap:wrap;
+    position:relative;
+    z-index:30;
+  }
+  .filter-group{ display:flex; align-items:center; gap:8px; position:relative; }
+  .filter-label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--text2);
+    font-weight:700;
+  }
+  select{
+    font-family:inherit;
+    padding:6px 10px;
+    border-radius:6px;
+    border:1px solid var(--grid);
+    background:#fff;
+    color:var(--text);
+    font-size:12px;
+  }
+  .chip{
+    padding:6px 12px;
+    border-radius:14px;
+    border:1px solid var(--grid);
+    font-size:11px;
+    cursor:pointer;
+    background:#fff;
+    color:var(--text2);
+    user-select:none;
+    font-weight:600;
+    transition:all .12s ease;
+  }
+  .chip.active{ background:var(--green); border-color:var(--green); color:#fff; }
+  .slicer-btn{
+    padding:6px 12px;
+    border-radius:6px;
+    border:1px solid var(--grid);
+    background:#fff;
+    font-size:12px;
+    cursor:pointer;
+    color:var(--text);
+    font-weight:600;
+  }
+  .dropdown-panel{
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0;
+    background:#fff;
+    border:1px solid var(--grid);
+    border-radius:8px;
+    box-shadow:0 10px 28px rgba(0,0,0,.10);
+    padding:10px;
+    width:230px;
+    z-index:50;
+    max-height:260px;
+    overflow:auto;
+  }
+  .dropdown-panel.hidden{ display:none; }
+  .dropdown-panel input[type=text]{
+    width:100%;
+    padding:6px 8px;
+    border:1px solid var(--grid);
+    border-radius:6px;
+    font-size:12px;
+    margin-bottom:8px;
+    font-family:inherit;
+  }
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:4px 2px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .reset-link{
+    font-size:11px;
+    color:var(--text2);
+    text-decoration:underline;
+    cursor:pointer;
+    margin-left:auto;
+  }
+
+  /* ---------- PAGES / GRID ---------- */
+  .page{ display:none; padding:18px 24px 48px; max-width:1400px; margin:0 auto; }
+  .page.active{ display:block; }
+  .visual-grid{
+    display:grid;
+    grid-template-columns:repeat(12,1fr);
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .visual-card{
+    background:var(--card);
+    border:1px solid var(--grid);
+    border-radius:10px;
+    padding:16px;
+  }
+  .visual-title{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.3px;
+    margin:0 0 10px;
+    color:var(--text);
+    text-transform:uppercase;
+  }
+  .visual-sub{
+    font-size:10px;
+    color:var(--text2);
+    margin:-6px 0 10px;
+  }
+  .span-8{ grid-column:span 8; }
+  .span-6{ grid-column:span 6; }
+  .span-4{ grid-column:span 4; }
+  .span-12{ grid-column:span 12; }
+  .chart-wrap{ position:relative; height:260px; }
+  .chart-wrap.short{ height:210px; }
+
+  /* ---------- MATRIX TABLE ---------- */
+  .matrix-table{ width:100%; border-collapse:collapse; font-size:11px; }
+  .matrix-table th, .matrix-table td{
+    border:1px solid var(--grid);
+    padding:6px 7px;
+    text-align:center;
+  }
+  .matrix-table th{
+    background:#faf9f6;
+    font-weight:700;
+    font-size:9.5px;
+    text-transform:uppercase;
+    color:var(--text2);
+    letter-spacing:.3px;
+  }
+  .matrix-table td.product-name{
+    text-align:left;
+    font-weight:700;
+    background:#faf9f6;
+    white-space:nowrap;
+  }
+  .cell-sales{ font-family:'Consolas',monospace; font-size:11px; }
+  .cell-profit{ font-family:'Consolas',monospace; font-size:11px; }
+  .cell-margin{
+    font-size:9.5px;
+    color:var(--text2);
+    margin-top:2px;
+  }
+
+  /* ---------- TOGGLE (bookmark simulation) ---------- */
+  .toggle-row{ display:flex; align-items:center; gap:8px; margin:2px 0 14px; }
+  .toggle-btn{
+    padding:6px 18px;
+    border-radius:20px;
+    border:1px solid var(--grid);
+    background:#fff;
+    font-size:12px;
+    cursor:pointer;
+    font-weight:700;
+    color:var(--text2);
+  }
+  .toggle-btn.active{ background:var(--nav); color:#fff; border-color:var(--nav); }
+
+  /* ---------- INSIGHTS ---------- */
+  .insights-list{ margin:0; padding-left:18px; font-size:12px; line-height:1.7; color:var(--text); }
+  .insights-list li{ margin-bottom:4px; }
+  .insights-list b{ color:var(--text); }
+
+  .footnote{ font-size:10.5px; color:var(--text2); padding:6px 24px 0; }
+
+  @media (max-width:920px){
+    .span-8,.span-6,.span-4{ grid-column:span 12; }
+    .navbar{ overflow-x:auto; }
+    .kpi-card{ flex-basis:45%; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <span class="brand">FINANCIAL PERFORMANCE</span>
+  <button id="navHome">Home</button>
+  <button id="navExec" class="active">Executive Overview</button>
+  <button id="navFin">Financial Performance</button>
+</nav>
+
+<div class="kpi-strip">
+  <div class="kpi-card">
+    <div class="kpi-label">Vendas Totais</div>
+    <div class="kpi-value mono" id="kpiSales" style="color:var(--green)">$0.0M</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Lucro Total</div>
+    <div class="kpi-value mono" id="kpiProfit" style="color:var(--green)">$0.0M</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Margem de Lucro</div>
+    <div class="kpi-value mono" id="kpiMargin" style="color:var(--gold)">0.0%</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Unidades Vendidas</div>
+    <div class="kpi-value mono" id="kpiUnits" style="color:var(--text)">0</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Crescimento YoY</div>
+    <div class="kpi-value mono" id="kpiGrowth" style="color:var(--green)">0.0%</div>
+  </div>
+</div>
+
+<div class="filters-bar">
+  <div class="filter-group">
+    <span class="filter-label">Ano</span>
+    <select id="yearSelect">
+      <option value="all">Todos</option>
+      <option value="2013">2013</option>
+      <option value="2014">2014</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Segmento</span>
+    <div id="segmentChips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">País</span>
+    <button class="slicer-btn" id="countryBtn" type="button">Todos ▾</button>
+    <div class="dropdown-panel hidden" id="countryPanel">
+      <input type="text" id="countrySearch" placeholder="Buscar país...">
+      <div id="countryList"></div>
+    </div>
+  </div>
+  <span class="reset-link" id="resetFilters">limpar filtros</span>
+</div>
+
+<!-- ===================== PAGE 1 — EXECUTIVE OVERVIEW ===================== -->
+<section class="page active" id="page-exec">
+  <div class="visual-grid">
+    <div class="visual-card span-8">
+      <p class="visual-title">Vendas e Lucro — Evolução Mensal</p>
+      <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="visual-card span-4">
+      <p class="visual-title">Top 5 Produtos por Vendas</p>
+      <div class="chart-wrap"><canvas id="top5Chart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PAGE 2 — FINANCIAL PERFORMANCE ===================== -->
+<section class="page" id="page-fin">
+  <div class="visual-grid">
+    <div class="visual-card span-6">
+      <p class="visual-title">Vendas por País</p>
+      <p class="visual-sub">tamanho da bolha = vendas totais</p>
+      <div class="chart-wrap"><canvas id="countryChart"></canvas></div>
+    </div>
+    <div class="visual-card span-6">
+      <p class="visual-title">Lucro por Segmento de Cliente</p>
+      <div class="chart-wrap"><canvas id="segmentChart"></canvas></div>
+    </div>
+    <div class="visual-card span-6">
+      <p class="visual-title">Vendas e Lucro por Produto</p>
+      <div class="chart-wrap"><canvas id="productChart"></canvas></div>
+    </div>
+    <div class="visual-card span-6">
+      <p class="visual-title">Detalhamento Produto × Segmento</p>
+      <p class="visual-sub">barra de fundo = intensidade da margem (verde = positiva, terracota = negativa)</p>
+      <div style="overflow-x:auto;"><table class="matrix-table" id="matrixTable"></table></div>
+    </div>
+  </div>
+
+  <div class="visual-card span-12" style="margin-bottom:16px;">
+    <p class="visual-title">Alternar Métrica por Produto</p>
+    <p class="visual-sub">equivalente aos bookmarks Sales / Profit / Units do Power BI — um único espaço, três leituras</p>
+    <div class="toggle-row">
+      <button class="toggle-btn active" data-metric="sales" type="button">Sales</button>
+      <button class="toggle-btn" data-metric="profit" type="button">Profit</button>
+      <button class="toggle-btn" data-metric="units" type="button">Units Sold</button>
+    </div>
+    <div class="chart-wrap short"><canvas id="toggleChart"></canvas></div>
+  </div>
+
+  <div class="visual-card span-12">
+    <p class="visual-title">Insights</p>
+    <ul class="insights-list">
+      <li><b>Enterprise dá prejuízo</b> — apesar de ser o 2º segmento em volume de vendas, tem lucro negativo: sinal de desconto agressivo e custo de servir elevado.</li>
+      <li><b>Government sustenta o resultado</b> — não é o segmento de maior faturamento, mas concentra a maior parte do lucro absoluto, com margem estruturalmente mais saudável.</li>
+      <li><b>Paseo é o produto-âncora</b> — maior volume e maior lucro absoluto entre os 6 produtos.</li>
+      <li><b>Margem desigual por país</b> — França e Alemanha operam com margem mais alta que o México, apesar de volumes de venda parecidos entre os países.</li>
+    </ul>
+  </div>
+</section>
+
+<p class="footnote">Base de dados sintética gerada para fins de demonstração, seguindo a estrutura da Financial Sample (Segment × Country × Product × Date, 2013–2014).</p>
+
+<script>
+/* =========================================================
+   1. DATA MODEL — synthetic fact table mirroring Financial Sample
+   ========================================================= */
+const PRODUCTS = [
+  {name:'Paseo',      price:7,  cost:3,  pop:3.2},
+  {name:'Carretera',  price:20, cost:8,  pop:0.9},
+  {name:'Montana',    price:15, cost:6,  pop:1.0},
+  {name:'Velo',       price:10, cost:5,  pop:0.8},
+  {name:'VTT',        price:20, cost:12, pop:0.6},
+  {name:'Amarilla',   price:12, cost:5,  pop:0.7},
+];
+
+const SEGMENTS = [
+  {name:'Government',        vol:1.00, disc:0.02, costMult:0.95},
+  {name:'Midmarket',         vol:1.25, disc:0.12, costMult:1.05},
+  {name:'Channel Partners',  vol:0.90, disc:0.15, costMult:1.05},
+  {name:'Enterprise',        vol:1.80, disc:0.45, costMult:1.60},
+  {name:'Small Business',    vol:0.70, disc:0.10, costMult:1.00},
+];
+
+const COUNTRIES = [
+  {name:'United States of America', vol:1.10, marginQ:1.00},
+  {name:'Canada',                   vol:0.95, marginQ:1.05},
+  {name:'Germany',                  vol:1.00, marginQ:1.20},
+  {name:'France',                   vol:0.90, marginQ:1.20},
+  {name:'Mexico',                   vol:1.05, marginQ:0.80},
+];
+
+function buildMonths(){
+  const months=[];
+  let idx=0;
+  for(const year of [2013,2014]){
+    for(let m=1;m<=12;m++){
+      const label = new Date(year,m-1,1).toLocaleString('en-US',{month:'short'})+"/"+String(year).slice(2);
+      months.push({year,m,idx,label});
+      idx++;
+    }
+  }
+  return months;
+}
+const MONTHS = buildMonths();
+
+function seasonality(m){ return [3,6,9,12].includes(m) ? 1.25 : 1.0; }
+function growthTrend(idx){ return 1 + (idx/(MONTHS.length-1))*0.35; }
+
+const BASE_UNITS = 200;
+
+const facts = [];
+for(const month of MONTHS){
+  for(const seg of SEGMENTS){
+    for(const country of COUNTRIES){
+      for(const prod of PRODUCTS){
+        const units = BASE_UNITS * prod.pop * seg.vol * country.vol * seasonality(month.m) * growthTrend(month.idx);
+        const effDiscount = seg.disc / country.marginQ;
+        const gross = units * prod.price;
+        const discountAmt = gross * effDiscount;
+        const netSales = gross - discountAmt;
+        const cogs = units * prod.cost * seg.costMult;
+        const profit = netSales - cogs;
+        facts.push({
+          year:month.year, m:month.m, idx:month.idx, label:month.label,
+          segment:seg.name, country:country.name, product:prod.name,
+          units, netSales, cogs, profit
+        });
+      }
+    }
+  }
+}
+
+/* =========================================================
+   2. STATE & FILTERING
+   ========================================================= */
+const state = {
+  year:'all',
+  segments:new Set(SEGMENTS.map(s=>s.name)),
+  countries:new Set(COUNTRIES.map(c=>c.name)),
+  toggleMetric:'sales',
+};
+
+function filteredFacts(){
+  return facts.filter(r=>
+    (state.year==='all' || r.year===Number(state.year)) &&
+    state.segments.has(r.segment) &&
+    state.countries.has(r.country)
+  );
+}
+
+function sum(rows,key){ return rows.reduce((a,r)=>a+r[key],0); }
+
+/* =========================================================
+   3. FORMATTERS
+   ========================================================= */
+function fmtMoneyM(v){
+  const sign = v<0 ? '-' : '';
+  return sign + '$' + (Math.abs(v)/1e6).toFixed(1) + 'M';
+}
+function fmtUnits(v){ return Math.round(v).toLocaleString('en-US'); }
+function fmtPct(v){ return (v*100).toFixed(1)+'%'; }
+function fmtPctSigned(v){ return (v>=0?'+':'') + (v*100).toFixed(1)+'%'; }
+
+/* =========================================================
+   4. AGGREGATIONS
+   ========================================================= */
+function aggByMonth(rows){
+  const map = new Map();
+  for(const r of rows){
+    const key = r.idx;
+    if(!map.has(key)) map.set(key,{idx:r.idx,label:r.label,sales:0,profit:0});
+    const o = map.get(key);
+    o.sales += r.netSales;
+    o.profit += r.profit;
+  }
+  return [...map.values()].sort((a,b)=>a.idx-b.idx);
+}
+function aggByProduct(rows){
+  const map = new Map();
+  for(const r of rows){
+    if(!map.has(r.product)) map.set(r.product,{product:r.product,sales:0,profit:0,units:0});
+    const o = map.get(r.product);
+    o.sales += r.netSales; o.profit += r.profit; o.units += r.units;
+  }
+  return [...map.values()];
+}
+function aggBySegment(rows){
+  const map = new Map();
+  for(const r of rows){
+    if(!map.has(r.segment)) map.set(r.segment,{segment:r.segment,sales:0,profit:0});
+    const o = map.get(r.segment);
+    o.sales += r.netSales; o.profit += r.profit;
+  }
+  return [...map.values()];
+}
+function aggByCountry(rows){
+  const map = new Map();
+  for(const r of rows){
+    if(!map.has(r.country)) map.set(r.country,{country:r.country,sales:0,units:0});
+    const o = map.get(r.country);
+    o.sales += r.netSales; o.units += r.units;
+  }
+  return COUNTRIES.map(c=>map.get(c.name) || {country:c.name,sales:0,units:0});
+}
+function aggByProductSegment(rows){
+  const map = new Map();
+  for(const r of rows){
+    const key = r.product+'|'+r.segment;
+    if(!map.has(key)) map.set(key,{sales:0,profit:0});
+    const o = map.get(key);
+    o.sales += r.netSales; o.profit += r.profit;
+  }
+  return map;
+}
+function salesForYear(y, rows){ return sum(rows.filter(r=>r.year===y),'netSales'); }
+
+/* =========================================================
+   5. CHART.JS SETUP
+   ========================================================= */
+Chart.defaults.font.family = "'Segoe UI', -apple-system, Arial, sans-serif";
+Chart.defaults.font.size = 10.5;
+Chart.defaults.color = '#2B2B26';
+
+const GREEN = '#4C7A57', GOLD = '#C99A2E', TERRA = '#B5533C', GRID = '#E4E2D8', GRAFITE = '#2B2B26';
+
+function moneyTick(v){ return '$'+(v/1e6).toFixed(1)+'M'; }
+
+let trendChart, top5Chart, countryChart, segmentChart, productChart, toggleChart;
+
+function initCharts(){
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type:'line',
+    data:{labels:[], datasets:[
+      {label:'Vendas', data:[], borderColor:GREEN, backgroundColor:GREEN, yAxisID:'y', tension:.3, pointRadius:2, borderWidth:2},
+      {label:'Lucro', data:[], borderColor:GOLD, backgroundColor:GOLD, yAxisID:'y1', tension:.3, pointRadius:2, borderWidth:2},
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmtMoneyM(ctx.parsed.y)}`}}
+      },
+      scales:{
+        y:{position:'left', ticks:{callback:moneyTick}, grid:{color:GRID}},
+        y1:{position:'right', ticks:{callback:moneyTick}, grid:{drawOnChartArea:false}},
+        x:{grid:{display:false}}
+      }
+    }
+  });
+
+  top5Chart = new Chart(document.getElementById('top5Chart'), {
+    type:'bar',
+    data:{labels:[], datasets:[{data:[], backgroundColor:[]}]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>fmtMoneyM(ctx.parsed.x)}}},
+      scales:{x:{ticks:{callback:moneyTick}, grid:{color:GRID}}, y:{grid:{display:false}}}
+    }
+  });
+
+  countryChart = new Chart(document.getElementById('countryChart'), {
+    type:'bubble',
+    data:{datasets:[{data:[], backgroundColor:'rgba(76,122,87,0.55)', borderColor:GREEN, borderWidth:1.5}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          title:ctx=>ctx[0].raw._country,
+          label:ctx=>`Vendas: ${fmtMoneyM(ctx.raw._sales)}  •  Unidades: ${fmtUnits(ctx.raw._units)}`
+        }}
+      },
+      scales:{
+        x:{min:-0.6,max:COUNTRIES.length-0.4, grid:{color:GRID}, ticks:{stepSize:1, callback:(v)=>COUNTRIES[v]?COUNTRIES[v].name.replace('United States of America','USA'):''}},
+        y:{min:-1,max:1, display:false, grid:{display:false}}
+      }
+    }
+  });
+
+  segmentChart = new Chart(document.getElementById('segmentChart'), {
+    type:'bar',
+    data:{labels:[], datasets:[{data:[], backgroundColor:[]}]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>fmtMoneyM(ctx.parsed.x)}}},
+      scales:{x:{ticks:{callback:moneyTick}, grid:{color:GRID}}, y:{grid:{display:false}}}
+    }
+  });
+
+  productChart = new Chart(document.getElementById('productChart'), {
+    type:'bar',
+    data:{labels:[], datasets:[
+      {label:'Vendas', data:[], backgroundColor:GREEN},
+      {label:'Lucro', data:[], backgroundColor:GOLD},
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true}}, tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmtMoneyM(ctx.parsed.y)}`}}},
+      scales:{y:{ticks:{callback:moneyTick}, grid:{color:GRID}}, x:{grid:{display:false}}}
+    }
+  });
+
+  toggleChart = new Chart(document.getElementById('toggleChart'), {
+    type:'bar',
+    data:{labels:[], datasets:[{data:[], backgroundColor:[]}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>state.toggleMetric==='units' ? fmtUnits(ctx.parsed.y)+' un.' : fmtMoneyM(ctx.parsed.y)}}},
+      scales:{
+        y:{ticks:{callback:v=> state.toggleMetric==='units' ? fmtUnits(v) : moneyTick(v)}, grid:{color:GRID}},
+        x:{grid:{display:false}}
+      }
+    }
+  });
+}
+
+/* =========================================================
+   6. RENDER
+   ========================================================= */
+function render(){
+  const rows = filteredFacts();
+
+  const totalSales = sum(rows,'netSales');
+  const totalProfit = sum(rows,'profit');
+  const totalUnits = sum(rows,'units');
+  const margin = totalSales!==0 ? totalProfit/totalSales : 0;
+
+  // KPIs
+  document.getElementById('kpiSales').textContent = fmtMoneyM(totalSales);
+  const kpiProfitEl = document.getElementById('kpiProfit');
+  kpiProfitEl.textContent = fmtMoneyM(totalProfit);
+  kpiProfitEl.style.color = totalProfit>=0 ? GREEN : TERRA;
+  document.getElementById('kpiMargin').textContent = fmtPct(margin);
+  document.getElementById('kpiUnits').textContent = fmtUnits(totalUnits);
+
+  const rowsForYoY = facts.filter(r=> state.segments.has(r.segment) && state.countries.has(r.country));
+  const curYear = state.year==='all' ? 2014 : Number(state.year);
+  const prevYear = curYear - 1;
+  const kpiGrowthEl = document.getElementById('kpiGrowth');
+  const hasPrev = MONTHS.some(mo=>mo.year===prevYear);
+  if(hasPrev){
+    const curSales = salesForYear(curYear, rowsForYoY);
+    const prevSales = salesForYear(prevYear, rowsForYoY);
+    const growth = prevSales!==0 ? (curSales-prevSales)/prevSales : 0;
+    kpiGrowthEl.textContent = fmtPctSigned(growth);
+    kpiGrowthEl.style.color = growth>=0 ? GREEN : TERRA;
+  } else {
+    kpiGrowthEl.textContent = '—';
+    kpiGrowthEl.style.color = GRAFITE;
+  }
+
+  // Trend chart
+  const monthly = aggByMonth(rows);
+  trendChart.data.labels = monthly.map(m=>m.label);
+  trendChart.data.datasets[0].data = monthly.map(m=>m.sales);
+  trendChart.data.datasets[1].data = monthly.map(m=>m.profit);
+  trendChart.update();
+
+  // Top 5 products
+  const byProduct = aggByProduct(rows).sort((a,b)=>b.sales-a.sales);
+  const top5 = byProduct.slice(0,5);
+  top5Chart.data.labels = top5.map(p=>p.product);
+  top5Chart.data.datasets[0].data = top5.map(p=>p.sales);
+  top5Chart.data.datasets[0].backgroundColor = top5.map((p,i)=> i===0 ? GOLD : GREEN);
+  top5Chart.update();
+
+  // Country bubble
+  const byCountry = aggByCountry(rows);
+  const maxSales = Math.max(1,...byCountry.map(c=>c.sales));
+  countryChart.data.datasets[0].data = byCountry.map((c,i)=>({
+    x:i, y:0,
+    r: 8 + (c.sales/maxSales)*32,
+    _country:c.country, _sales:c.sales, _units:c.units
+  }));
+  countryChart.update();
+
+  // Segment profit
+  const bySegment = aggBySegment(rows).sort((a,b)=>b.profit-a.profit);
+  segmentChart.data.labels = bySegment.map(s=>s.segment);
+  segmentChart.data.datasets[0].data = bySegment.map(s=>s.profit);
+  segmentChart.data.datasets[0].backgroundColor = bySegment.map(s=> s.profit>=0 ? GREEN : TERRA);
+  segmentChart.update();
+
+  // Product sales x profit
+  const byProductSalesDesc = [...byProduct].sort((a,b)=>b.sales-a.sales);
+  productChart.data.labels = byProductSalesDesc.map(p=>p.product);
+  productChart.data.datasets[0].data = byProductSalesDesc.map(p=>p.sales);
+  productChart.data.datasets[1].data = byProductSalesDesc.map(p=>p.profit);
+  productChart.update();
+
+  // Matrix product x segment
+  renderMatrix(rows);
+
+  // Toggle chart
+  renderToggleChart(byProduct);
+}
+
+function renderMatrix(rows){
+  const map = aggByProductSegment(rows);
+  const productsSorted = aggByProduct(rows).sort((a,b)=>b.sales-a.sales).map(p=>p.product);
+  const segNames = SEGMENTS.map(s=>s.name);
+
+  let html = '<thead><tr><th>Produto</th>';
+  for(const seg of segNames) html += `<th>${seg}</th>`;
+  html += '</tr></thead><tbody>';
+
+  for(const prod of productsSorted){
+    html += `<tr><td class="product-name">${prod}</td>`;
+    for(const seg of segNames){
+      const cell = map.get(prod+'|'+seg) || {sales:0,profit:0};
+      const mgn = cell.sales!==0 ? cell.profit/cell.sales : 0;
+      const width = Math.min(100, Math.abs(mgn*100)*2.2);
+      const color = mgn>=0 ? '76,122,87' : '181,83,60';
+      html += `<td style="background:linear-gradient(to right, rgba(${color},0.22) ${width}%, transparent ${width}%);">
+        <div class="cell-sales">${fmtMoneyM(cell.sales)}</div>
+        <div class="cell-profit" style="color:${mgn>=0?'#4C7A57':'#B5533C'}">${fmtMoneyM(cell.profit)}</div>
+        <div class="cell-margin">${fmtPct(mgn)}</div>
+      </td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody>';
+  document.getElementById('matrixTable').innerHTML = html;
+}
+
+function renderToggleChart(byProduct){
+  const metric = state.toggleMetric;
+  const key = metric==='sales' ? 'sales' : metric==='profit' ? 'profit' : 'units';
+  const sorted = [...byProduct].sort((a,b)=>b[key]-a[key]);
+  toggleChart.data.labels = sorted.map(p=>p.product);
+  toggleChart.data.datasets[0].data = sorted.map(p=>p[key]);
+  if(metric==='profit'){
+    toggleChart.data.datasets[0].backgroundColor = sorted.map(p=> p.profit>=0 ? GREEN : TERRA);
+  } else if(metric==='units'){
+    toggleChart.data.datasets[0].backgroundColor = sorted.map(()=> GRAFITE);
+  } else {
+    toggleChart.data.datasets[0].backgroundColor = sorted.map(()=> GREEN);
+  }
+  toggleChart.update();
+}
+
+/* =========================================================
+   7. UI WIRING
+   ========================================================= */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('navExec').classList.toggle('active', id==='exec');
+  document.getElementById('navFin').classList.toggle('active', id==='fin');
+}
+
+document.getElementById('navExec').addEventListener('click', ()=>showPage('exec'));
+document.getElementById('navFin').addEventListener('click', ()=>showPage('fin'));
+document.getElementById('navHome').addEventListener('click', ()=>{
+  resetFilters();
+  showPage('exec');
+});
+
+document.getElementById('yearSelect').addEventListener('change', e=>{
+  state.year = e.target.value;
+  render();
+});
+
+function renderSegmentChips(){
+  const container = document.getElementById('segmentChips');
+  container.innerHTML = SEGMENTS.map(s=>
+    `<div class="chip ${state.segments.has(s.name)?'active':''}" data-segment="${s.name}">${s.name}</div>`
+  ).join('');
+  container.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const seg = chip.dataset.segment;
+      if(state.segments.has(seg)) state.segments.delete(seg); else state.segments.add(seg);
+      chip.classList.toggle('active');
+      render();
+    });
+  });
+}
+
+const countryBtn = document.getElementById('countryBtn');
+const countryPanel = document.getElementById('countryPanel');
+const countryList = document.getElementById('countryList');
+const countrySearch = document.getElementById('countrySearch');
+
+function renderCountryList(filterText=''){
+  const list = COUNTRIES.filter(c=>c.name.toLowerCase().includes(filterText.toLowerCase()));
+  countryList.innerHTML = list.map(c=>
+    `<label class="checkbox-row"><input type="checkbox" value="${c.name}" ${state.countries.has(c.name)?'checked':''}> ${c.name}</label>`
+  ).join('') || '<div style="font-size:11px;color:#7A7C6E;padding:6px 0;">Nenhum país encontrado</div>';
+}
+function updateCountryBtnLabel(){
+  const total = COUNTRIES.length, sel = state.countries.size;
+  countryBtn.textContent = (sel===total ? 'Todos' : sel===0 ? 'Nenhum' : sel+' selecionados') + ' ▾';
+}
+countryBtn.addEventListener('click', (e)=>{
+  e.stopPropagation();
+  countryPanel.classList.toggle('hidden');
+});
+countrySearch.addEventListener('input', e=> renderCountryList(e.target.value));
+countryList.addEventListener('change', e=>{
+  if(e.target.type==='checkbox'){
+    if(e.target.checked) state.countries.add(e.target.value); else state.countries.delete(e.target.value);
+    updateCountryBtnLabel();
+    render();
+  }
+});
+document.addEventListener('click', (e)=>{
+  if(!countryPanel.contains(e.target) && e.target!==countryBtn){
+    countryPanel.classList.add('hidden');
+  }
+});
+
+document.querySelectorAll('.toggle-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.toggleMetric = btn.dataset.metric;
+    renderToggleChart(aggByProduct(filteredFacts()));
+  });
+});
+
+document.getElementById('resetFilters').addEventListener('click', ()=>{
+  resetFilters();
+});
+
+function resetFilters(){
+  state.year = 'all';
+  state.segments = new Set(SEGMENTS.map(s=>s.name));
+  state.countries = new Set(COUNTRIES.map(c=>c.name));
+  document.getElementById('yearSelect').value = 'all';
+  renderSegmentChips();
+  renderCountryList(countrySearch.value);
+  updateCountryBtnLabel();
+  render();
+}
+
+/* =========================================================
+   8. INIT
+   ========================================================= */
+initCharts();
+renderSegmentChips();
+renderCountryList();
+updateCountryBtnLabel();
+render();
+</script>
+</body>
+</html>
